@@ -48,6 +48,7 @@ async function conn3(value){
         const f=data.find((l)=>Object.values(l)[3]==380)
         if(f){
             console.log("find is " + f);
+            
         }
     }
     else{
