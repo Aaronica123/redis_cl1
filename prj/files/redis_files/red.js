@@ -45,10 +45,27 @@ async function conn3(value){
     if(g){
         console.log("data is found");
         const data=JSON.parse(g)
-        const f=data.find((l)=>Object.values(l)[3]==380)
+        const f=data.find((l)=>Object.values(l)[3]==2100)
+        const g1=data.findIndex((l)=>Object.values(l)[3]==2100);
         if(f){
+
             console.log("find is " + f);
+            console.log("the index is "+g1);
+           
+           const c=Object.values(data[g1])
+           Object.values(data[g1].user_id=2100);
+           
+            console.log("the new f is " + c);
+            // data[g1]=c;
+            console.log("update " +Object.values(data[g1]));
+            console.log("the body is "+data)
+            await value.set("value",JSON.stringify(data));
+        
             
+            
+        }
+        else{
+            console.log("the cache not available");
         }
     }
     else{
@@ -69,7 +86,7 @@ async function call_red(){
     const d=await r.connect();
     const f=await conn2(d);
     await conn3(d);
-    console.log("the value is " + f);
+    // console.log("the value is " + f);
 }
 
 export default call_red;
