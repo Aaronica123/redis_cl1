@@ -10,15 +10,17 @@ const redis_con=createClient({
 
 class redis{
     async connect_red(){
-        console.log("c is type "+ c);
+        // console.log("c is type "+ c);
         if(c){
             return c;
         }
         else{
         console.log("attempt connect")
         const f=await redis_con.connect();
-        f.json.
-       
+        // const p=await f.json.get("invmain");
+        // const p1=await f.json.get("invmain","$[?(@.inv_id==100)]");
+        // console.log("item p "+p1);
+        //console.log(p);
         c=f;
         return f;
         }
@@ -116,10 +118,12 @@ class redis{
             const {inv_id}=req.body;
             console.log(inv_id)
            
-            const gt = await data.json.get("invmain","wefxwsdedseea.[0w4g2srfdcvnvbcvxscfsdserdtfsdw]");
-            const gt1 = await data.json.get("invmain");
-            console.log(gt);
-            console.log(gt1)
+             const gt = await data.json.get(`invmain`, {
+            path: `$[?(@.inv_id==${inv_id})]`
+        });
+            // const gt1 = await data.json.get("invmainwed");
+           console.log(gt);
+            //console.log(gt1)
         }
         catch(error){
             console.log(error.message);
