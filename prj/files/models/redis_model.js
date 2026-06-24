@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-
+import inv_obj from "./inventory.js";
 import user_obj from "./user_model.js";
 var c=null;
 const redis_con=createClient({
@@ -136,7 +136,8 @@ class redis{
 export class inv_md extends redis {
 async write(req,res){
     const d=await this.connect_red();
-    const {inv_id}=req.body;
+    const {inv_id,amount}=req.body;
+
     if(d){
         console.log("connected");
         const j=await d.json.get("inventory");
@@ -147,8 +148,9 @@ async write(req,res){
                 return res.status(409).json({"message":"This item already exists"});
             }
             else{
-                const ar=await d.json.arrAppend("inventory","$",{"inv_id":inv_id})
-                if(ar){
+                const ar=await d.json.arrAppend("inventory","$",{"inv_id":inv_id,"amount":amount})
+                const db=await inv_obj.create({"inv_id":inv_id,"amount":amount});
+                if(ar && db){
                     return res.status(201).json({"message":"Inventory item recorder"})
                 }
                 else{
@@ -159,8 +161,10 @@ async write(req,res){
         else{
             const cr=await d.json.set("inventory","$",[]);
             if(cr){
-            const set=await d.json.arrAppend("inventory","$",{"inv_id":inv_id});
-            if(set){
+            const set=await d.json.arrAppend("inventory","$",{"inv_id":inv_id,"amount":amount});
+            const db=await inv_obj.create({"inv_id":inv_id,"amount":amount});
+            if(set && db){
+
                 return res.status(201).json({"message":"cache created and recorded"})
             }
             else{
@@ -177,7 +181,34 @@ async write(req,res){
         return res.status(500).json({"message":"Redis connection failed"})
     }
 }
+ async read (req,res){
+    const data=await this.connect_red();
+    try{
 
+    
+    if(data){
+        const j1=await data.json.get("inventory",{path: "$"});
+        if(j1){
+            return res.status(200).json({'message':"fetched records",
+                j1
+            })
+        }
+        else{
+           return res.status(404).json({"message":"data not found"})
+        }
+    }
+    else{
+        return res.status(500).json({"message":"redis connection failed"})
+    }
+    }
+    catch(error){
+        console.log(error.message);
+    }
+
+
+
+    
+}
 }
 
 export default redis;

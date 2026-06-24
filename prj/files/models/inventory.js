@@ -11,11 +11,6 @@ const inv=Schema({
         type:Number,
         required:true,
         minlength:0
-    },
-    inv_name:{
-        type:String,
-        required:true,
-        unique:true
     }
 })
 
