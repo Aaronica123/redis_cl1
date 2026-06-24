@@ -144,10 +144,12 @@ async write(req,res){
         if(j){
             const da=await d.json.get("inventory",{path:`$.[?(@.inv_id==${inv_id})]`});
             if(da.length>0){
+                await d.expire("inventory",60);
                 console.log(da);
                 return res.status(409).json({"message":"This item already exists"});
             }
             else{
+                await d.expire("inventory",60);
                 const ar=await d.json.arrAppend("inventory","$",{"inv_id":inv_id,"amount":amount})
                 const db=await inv_obj.create({"inv_id":inv_id,"amount":amount});
                 if(ar && db){
@@ -159,8 +161,24 @@ async write(req,res){
             }
         }
         else{
+            
+            // if(cr){
+                const f=await inv_obj.find({},{_id:0 , __v:0});
             const cr=await d.json.set("inventory","$",[]);
             if(cr){
+             f.forEach((l)=>{
+               const p=async()=>{
+                const y=await d.json.arrAppend("inventory","$",l);
+                if(y){
+                    console.log("stored")
+                }
+               } 
+              p(); 
+             })
+             
+            }
+            console.log(f);
+            await d.expire("inventory",60);
             const set=await d.json.arrAppend("inventory","$",{"inv_id":inv_id,"amount":amount});
             const db=await inv_obj.create({"inv_id":inv_id,"amount":amount});
             if(set && db){
@@ -170,10 +188,10 @@ async write(req,res){
             else{
                 return res.status(500).json({"message":"failed to append"})
             }
-        }
-        else{
-            return res.status(500).json({"message":"failed to create array"})
-        }
+        // }
+        // else{
+        //     return res.status(500).json({"message":"failed to create array"})
+        // }
         }
     }
     else{
@@ -188,13 +206,30 @@ async write(req,res){
     
     if(data){
         const j1=await data.json.get("inventory",{path: "$"});
-        if(j1){
-            return res.status(200).json({'message':"fetched records",
+        if(j1){            
+            await data.expire("inventory",60);
+            return res.status(200).json({'message':"data fetched from cache",
                 j1
             })
         }
         else{
-           return res.status(404).json({"message":"data not found"})
+            const f=await inv_obj.find({},{_id:0 , __v:0});
+            const cr=await data.json.set("inventory","$",[]);
+            if(cr){
+             f.forEach((l)=>{
+               const p=async()=>{
+                const y=await data.json.arrAppend("inventory","$",l);
+                if(y){
+                    console.log("stored")
+                }
+               } 
+              p(); 
+             })
+             
+            }
+            console.log(f);
+           await data.expire("inventory",30);
+           return res.status(404).json({"message":"data fetched from database",f})
         }
     }
     else{
@@ -213,19 +248,41 @@ async update(req,res){
     const data=await this.connect_red();
     if(data){
         const {inv_id,amount}=req.body;
+        const f=await inv_obj.find({},{_id:0 , __v:0});
+            const cr=await data.json.set("inventory","$",[]);
+            if(cr){
+             f.forEach((l)=>{
+               const p=async()=>{
+                const y=await data.json.arrAppend("inventory","$",l);
+                if(y){
+                    console.log("stored")
+                }
+               } 
+              p(); 
+             })
+             
+            }
+            console.log(f);
+           await data.expire("inventory",30);
 
         const j=await data.json.get(`inventory`, {path : `$.[?(@.inv_id==${Number(inv_id)})]`})
         console.log(j)
     
-        if(j){
+        if(j.length>0){
              console.log("1")
             const up=await data.json.set("inventory", `$.[?(@.inv_id==${Number(inv_id)})].amount`,`"${amount}"`);
-            if(up){
+            const db=await inv_obj.findOneAndUpdate({inv_id:inv_id},{$set: {amount:amount}});
+            if(up && db){
                 console.log(up);
+                return res.status(200).json({"message":"Record updated"})
             }
             else{
                 console.log("failed");
+                return res.status(500).json({"message":"failed to update"})
             }
+        }
+        else{
+            return res.status(404).json({'message':"record not found"});
         }
         
     }
