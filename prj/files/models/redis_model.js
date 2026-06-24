@@ -10,15 +10,17 @@ const redis_con=createClient({
 
 class redis{
     async connect_red(){
-        console.log("c is type "+ c);
+        // console.log("c is type "+ c);
         if(c){
             return c;
         }
         else{
         console.log("attempt connect")
         const f=await redis_con.connect();
-        f.json.
-       
+        // const p=await f.json.get("invmain");
+        // const p1=await f.json.get("invmain","$[?(@.inv_id==100)]");
+        // console.log("item p "+p1);
+        //console.log(p);
         c=f;
         return f;
         }
@@ -116,10 +118,12 @@ class redis{
             const {inv_id}=req.body;
             console.log(inv_id)
            
-            const gt = await data.json.get("invmain","wefxwsdedseea.[0w4g2srfdcvnvbcvxscfsdserdtfsdw]");
-            const gt1 = await data.json.get("invmain");
-            console.log(gt);
-            console.log(gt1)
+             const gt = await data.json.get(`invmain`, {
+            path: `$[0]`
+        });
+            // const gt1 = await data.json.get("invmainwed");
+           console.log(gt);
+            //console.log(gt1)
         }
         catch(error){
             console.log(error.message);
@@ -128,4 +132,52 @@ class redis{
 
 
 }
+
+export class inv_md extends redis {
+async write(req,res){
+    const d=await this.connect_red();
+    const {inv_id}=req.body;
+    if(d){
+        console.log("connected");
+        const j=await d.json.get("inventory");
+        if(j){
+            const da=await d.json.get("inventory",{path:`$.[?(@.inv_id==${inv_id})]`});
+            if(da.length>0){
+                console.log(da);
+                return res.status(409).json({"message":"This item already exists"});
+            }
+            else{
+                const ar=await d.json.arrAppend("inventory","$",{"inv_id":inv_id})
+                if(ar){
+                    return res.status(201).json({"message":"Inventory item recorder"})
+                }
+                else{
+                    return res.status(500).json({"message":"inventory failed to create"})
+                }
+            }
+        }
+        else{
+            const cr=await d.json.set("inventory","$",[]);
+            if(cr){
+            const set=await d.json.arrAppend("inventory","$",{"inv_id":inv_id});
+            if(set){
+                return res.status(201).json({"message":"cache created and recorded"})
+            }
+            else{
+                return res.status(500).json({"message":"failed to append"})
+            }
+        }
+        else{
+            return res.status(500).json({"message":"failed to create array"})
+        }
+        }
+    }
+    else{
+        console.log("cannot connect");
+        return res.status(500).json({"message":"Redis connection failed"})
+    }
+}
+
+}
+
 export default redis;
