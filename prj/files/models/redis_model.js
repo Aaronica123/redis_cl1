@@ -209,6 +209,31 @@ async write(req,res){
 
     
 }
+async update(req,res){
+    const data=await this.connect_red();
+    if(data){
+        const {inv_id,amount}=req.body;
+
+        const j=await data.json.get(`inventory`, {path : `$.[?(@.inv_id==${Number(inv_id)})]`})
+        console.log(j)
+    
+        if(j){
+             console.log("1")
+            const up=await data.json.set("inventory", `$.[?(@.inv_id==${Number(inv_id)})].amount`,`"${amount}"`);
+            if(up){
+                console.log(up);
+            }
+            else{
+                console.log("failed");
+            }
+        }
+        
+    }
+    else{
+        console.log("connection failed");
+        return res.status(500).json({"message":"redis connection failed"});
+    }
+}
 }
 
 export default redis;

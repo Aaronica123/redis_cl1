@@ -6,6 +6,7 @@ import create_item from "./actions/inv_create.js";
 import update from "./actions/inv_search.js";
 import create_inv from "./inventory/inv_create.js";
 import read_inv from "./inventory/inv_read.js";
+import update_inv from "./inventory/inv_update.js";
 const app=express();
 
 app.use(express.json());
@@ -14,6 +15,7 @@ app.post("/create",create);
 app.post("/create_item",create_item);
 app.post("/update",update);
 app.post("/create_inv",create_inv);
+app.post("/update_inv",update_inv);
 app.get("/read_inv",read_inv);
 app.get("/fetch",fetch);
 app.get("/fetch_redis",fetch_red);
